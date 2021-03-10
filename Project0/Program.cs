@@ -18,7 +18,7 @@ namespace Project0
 
         static void Main(string[] args)
         {
-            memory();
+            menu();
 
 
 
@@ -44,13 +44,15 @@ namespace Project0
                     
                     try
                     {
-                        if (reader.ReadLine().Equals(username))
+                        string checkUsername = reader.ReadLine().Split(',')[0];
+                        if (checkUsername.Equals(username))
                         {
-
+                            Console.WriteLine(reader.ReadLine());
                             TextWriter verwijderZin = new StreamWriter(fileName);
                             // Pak de gebruiker 
                             verwijderZin.Write(string.Empty);
                             Console.WriteLine(reader.ReadLine());
+                            Thread.Sleep(5000);
                             verwijderZin.Flush();
                             verwijderZin.Close();
                         }
@@ -89,7 +91,6 @@ namespace Project0
             Console.CursorVisible = false;
 
             int huidigePositie = 0;
-            Console.SetCursorPosition(50, 50);
             ConsoleKey key;
 
             do
@@ -135,7 +136,7 @@ namespace Project0
                         {
                             case 0:
                                 clearConsole();
-                                authenticatieGebruiker();
+                                SchrijfGeberuikerNaarBestand(authenticatieGebruiker());
                                 break;
                             case 1:
                                 clearConsole();
@@ -178,42 +179,127 @@ namespace Project0
             // start tijd
 
         }
-        public static void timer()
+        public static void timer(Object stateInfo)
         {
-            // Pak een Datetime.now minutes and seconds start 
-            // Doe een thread om de 2000 seconden
-            // Zet dat om naar een variable speeltijd die het verschil neemt tussen elke tijd dat er een thread is ti
-            
-            string now = DateTime.Now.ToString("mm:ss");
-            
+            Console.WriteLine("Tick: {0}", DateTime.Now.ToString("h:mm:ss"));
+
 
         }
 
+        public static int CheckKeuze(bool keuze, int getal)
+        {            
 
-        public  static void welkomPagina(bool inlog)
+            while (!keuze)
+            {
+                Console.WriteLine("Niet goed ! Je kan alleen getallen ingeven ...");
+
+                Console.Write(": ");
+
+                keuze = int.TryParse(Console.ReadLine(), out getal);
+            }
+
+            return getal;
+
+        }
+        public  static void welkomPagina(string username)
         {
-            string username = "";
-            if (!username.Equals(string.Empty))
+            clearConsole();
+            ConsoleKey key = ConsoleKey.Enter;
+            TimerCallback callback = new TimerCallback(timer);
+            // create a one second timer tick
+            Console.WriteLine(username);
+            
+            int geld = 100;
+            do
             {
 
-                string welkomTekst = $"Welkom {username}, Welkom bij GameX";
-                Console.WriteLine($"Welkom {username}, Welkom bij GameX");
-                Console.WriteLine(new string('=', welkomTekst.Length));
-                string input = string.Empty;
-                // Display the time every so often
-                toonTijd();
+                if (!username.Equals("U kon niet succesvol inloggen"))
+                {
 
-                int geld;
+                    int getal, getal2;
 
-            }
-            else
-            {
-                Console.WriteLine("U kon niet succesvol inloggen");
-                menu();
+                    if (geld == 0)
+                    {
+                        Thread.Sleep(1000);
+                        clearConsole();
+                        Console.WriteLine("U moet terug geld storten om te kunnen spelen!!!");
+                        bool stortGeld = int.TryParse(Console.ReadLine(), out getal2);
+                        geld = CheckKeuze(stortGeld, getal2);
+                        System.Threading.Timer stateTimer = new System.Threading.Timer(callback, null, 0, 1000);
 
-            }
+                        // Simulating other work (10 seconds)
+                        Console.WriteLine("Speeltijd {0}\n",
+                             DateTime.Now.ToString("h:mm:ss"));
+                        Thread.Sleep(5000);
+                        clearConsole();
+
+                    }
+
+                    string welkomTekst = $"Welkom {username}, bij GameX";
+                    Console.WriteLine(welkomTekst);
+                    Console.WriteLine(new string('=', welkomTekst.Length));
+                    string input = string.Empty;
+                    // Display the time every so often
+                    toonTijd();
+                    string[] spellen = { "Blackjack", "Memory", "Slot Machine" };
+
+                    Console.WriteLine($"U heeft {geld} euro");
 
 
+                    Console.Write("Als je wil stoppen druk dan Escape");
+                    key = Console.ReadKey(true).Key;
+                    if (key.Equals(ConsoleKey.Escape))
+                    {
+                        Console.Write("U wordt uitgelogd");
+                        Thread.Sleep(1000);
+                        break;
+
+                    }
+                        
+                    Console.WriteLine();
+
+                    Console.WriteLine("U kan kiezen uit de volgende spellen: ");
+                    for (int i = 0; i < spellen.Length; i++)
+                        Console.WriteLine($"{i + 1}: {spellen[i]}");
+                    Console.Write("Maak uw keuze: ");
+                    bool checkKeuze = int.TryParse(Console.ReadLine(), out getal);
+                    getal = CheckKeuze(checkKeuze, getal);
+                    switch (getal)
+                    {
+                        case 1:
+                            Console.WriteLine("Blackjack");
+                            //Blackjack
+                            break;
+                        case 2:
+                            geld = memory(geld);
+                            break;
+                        case 3:
+                            geld = slotMachine(geld);
+                            break;
+                        default:
+                            Console.WriteLine("Dit getal bestaat niet");
+                            Thread.Sleep(1000);
+                            clearConsole();
+                            break;
+
+                    }
+                    
+
+
+                }
+                else
+                {
+                    Console.WriteLine(username);
+                    menu();
+
+                }
+                key = Console.ReadKey(true).Key;
+
+
+            } while (!key.Equals(ConsoleKey.Escape));
+
+            
+            
 
 
         }
@@ -237,13 +323,16 @@ namespace Project0
                     goedeChar += 1;
 
             }
+            
 
             if (goedeChar == input.Length)
                 username = input;
 
-
             else
                 Console.WriteLine("De username was niet goed. U mag alleen letters en getallen ingeven");
+
+            string[] checkOfUsernameBestaat = { username, " " };
+            SchrijfGeberuikerNaarBestand(checkOfUsernameBestaat);
 
 
 
@@ -258,7 +347,6 @@ namespace Project0
                 input2.Any(char.IsUpper) && 
                 input2.Any(char.IsLower) &&
                 input2.Any(char.IsDigit) ? true : false;
-            string wachtwoord = string.Empty;
             string[] authenticatie = new string[2];
             string[] leeg = new string[2];
 
@@ -268,8 +356,7 @@ namespace Project0
             {
                 authenticatie[0] = username;
                 //Wachtwoord moet in hashvorm komen
-                authenticatie[1] = ComputeSha256Hash(wachtwoord);
-                Console.WriteLine(authenticatie[1]);
+                authenticatie[1] =  ComputeSha256Hash(input2);
                 return authenticatie;
                 
 
@@ -310,21 +397,6 @@ namespace Project0
                         string gegeven = $"{gegevens[0]},{gegevens[1]}";
                         writer.WriteLine(gegeven);
 
-                        //Check of de een username in de gegvens is 
-                        allRegels = reader.ReadToEnd();
-
-                        string[] lines = allRegels.Split(',');
-                        foreach (var line in lines)
-                        {
-                            if (lines[0] == gegevens[0])
-                            {
-                                // Als dat zo is redirect the user
-                                Console.WriteLine("Jouw username staat al in onze gegevens");
-                                //Redirect to the inlogpage
-                                inloggenGebruiker();
-                            }
-                        }
-
                     }
                     else
                     {
@@ -340,6 +412,11 @@ namespace Project0
                                 inloggenGebruiker();
                             }
                         }
+                        Console.WriteLine(gegevens[0]);
+                        Console.WriteLine(gegevens[1]);
+                        string gegeven = $"{gegevens[0]},{gegevens[1]}";
+                        writer.WriteLine(gegeven);
+
                     }
                   
                 }
@@ -385,7 +462,7 @@ namespace Project0
         }
 
 
-        public static bool inloggenGebruiker()
+        public static string inloggenGebruiker()
         {
             Console.Write("Vul je username in: ");
             string input = Console.ReadLine().ToLower();
@@ -410,34 +487,41 @@ namespace Project0
                         string user = reader.ReadLine();
                         //Split the username
                         string username = user.Substring(0, user.IndexOf(','));
-                        string wachtwoord = user.Substring(username.Length + 1);
+                        string wachtwoord = user.Substring(username.Length+1);
 
+
+                 
                         if (username.Equals(input))
                         {
+                         
+
                             if (input2.Equals(wachtwoord))
                             {
-                                inlogSuccess = true;
+
                                 // Doorverwijzen naar menu van games
-                                
+                                return username;
+
                             }
+                            else
+                                return "U kon niet succesvol inloggen";
 
                         }
+                        else
+                            return "U kon niet succesvol inloggen";
+
+
                         
                     }
              
 
                     
                 }
-                if (inlogSuccess)
-                    return inlogSuccess;
-                else
-                    Console.WriteLine("U kon niet succesvol inloggen");
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
-            return false;
+            return " ";
 
            
 
@@ -531,30 +615,28 @@ namespace Project0
             //
 
         }
-        public static void memory()
+        
+        public static int memory(int geld)
         {
-            // Maken van 2 Arrays ==> 1 Oplossing, en 1 voor vraagen
-            // tekens vragen + Maak een random getal tussen begin en aantal
-            // Maak een switch met de kleuren voor de verschillende tekens
-            // Teller maken van 1 -10
-            // Laten verdwijnen van resultaten
-            // Hoe checken resultaten. 
-            // Kaart 
+            
+            Thread.Sleep(2000);
+            clearConsole();
+            Console.WriteLine("Welkom bij Memory: Een spel waar je tijd krijgt om een combinatie te onthouden");
 
             char[] raadKaarten = new char[10];
             string[] Vraagtekens = new string[10];
             string ruimte = new string(' ', 5);
             string ruimteKaarten = new string(' ', 4);
             Random rnd = new Random();
-            
+
 
             foreach (var getal in Enumerable.Range(0, 10))
             {
                 int randomGetal = rnd.Next(2, 7);
-                Console.Write(" " + $"{getal+1}" + ruimte);
-                Vraagtekens[getal] = "[?]";
+                Console.Write(" " + $"{getal + 1}" + ruimte);
+                Vraagtekens[getal] = "?";
                 raadKaarten[getal] = (char)randomGetal;
-                
+
             }
 
             Console.WriteLine();
@@ -562,16 +644,68 @@ namespace Project0
             int teller = 0;
             string input = string.Empty;
 
-            do
+
+            for (int i = 0; i < raadKaarten.Length; i++)
             {
 
-                for (int i = 0; i < lijstKaarten.Count(); i++)
+                if (i < raadKaarten.Length)
                 {
-
-                    if (i < raadKaarten.Length)
+                    //Kleuren er bij zetten
+                    switch (raadKaarten[i])
                     {
-                        //Kleuren er bij zetten
-                        switch (raadKaarten[i])
+                        case (char)2:
+                            Console.ForegroundColor = ConsoleColor.Yellow;
+                            break;
+                        case (char)3:
+                            Console.ForegroundColor = ConsoleColor.DarkGreen;
+                            break;
+                        case (char)4:
+                            Console.ForegroundColor = ConsoleColor.DarkGreen;
+                            break;
+                        case (char)5:
+                            Console.ForegroundColor = ConsoleColor.DarkRed;
+                            break;
+                        case (char)6:
+                            Console.ForegroundColor = ConsoleColor.DarkRed;
+                            break;
+                    }
+
+                    Console.Write("[" + lijstKaarten[i] + "]" + ruimteKaarten);
+
+                }
+         
+
+                Console.ResetColor();
+            }
+            Console.WriteLine();
+            Console.WriteLine("ONTHOUT DIT");
+            Thread.Sleep(5000);
+            clearConsole();
+
+
+            int teller1 = 1;
+            ConsoleKey key;
+            char keuze = ' ';
+            char teken = ' ';
+            do {
+                // Maak een combinatie van vraagtekens
+                for (int j = 1; j < Vraagtekens.Length + 1; j++)
+                {
+                    Console.Write(" " + j + ruimte);
+
+                }
+
+                Console.WriteLine();
+                int randomTeken = rnd.Next(2, 7);
+                
+
+                for (int k = 0; k < Vraagtekens.Length; k++)
+                {
+                    // Als zijn keuze juist is dan laten tonen van resultaat
+                    // Keuze onthouden
+                    if (teken == raadKaarten[k])
+                    {
+                        switch (raadKaarten[k])
                         {
                             case (char)2:
                                 Console.ForegroundColor = ConsoleColor.Yellow;
@@ -589,30 +723,57 @@ namespace Project0
                                 Console.ForegroundColor = ConsoleColor.DarkRed;
                                 break;
                         }
-                        teller += 1;
+
+                        Console.Write("[" + raadKaarten[k] + "]" + ruimteKaarten);
+                        Console.ResetColor();
 
                     }
+
                     else
-                    {
-                        if (teller == raadKaarten.Length)
-                        {
-                            Thread.Sleep(5000);
-                            clearConsole();
-                        }
+                        Console.Write("[" + Vraagtekens[k] + "]" + ruimteKaarten);
+                }
+                Console.WriteLine();
+                Console.WriteLine("Keuzes zijn:  'h'artje, 'k'lavertje, 'l'achje, 'r'uitje, 'b'ladje  ");
+                Console.Write($"Kaart {teller+1}: ");
+                keuze = Convert.ToChar(Console.ReadLine());
 
-
-                    }
-
-                    Console.Write("[" + lijstKaarten[i] + "]" + ruimteKaarten);
-                    Console.ResetColor();
+                // Eerst nog omzetten van char
+                switch (keuze)
+                {
+                    case 'h':
+                        teken = (char)3;
+                        break;
+                    case 'k':
+                        teken = (char)5;
+                        break;
+                    case 'l':
+                        teken = (char)2;
+                        break;
+                    case 'r':
+                        teken = (char)4;
+                        break;
+                    case 'b':
+                        teken = (char)6;
+                        break;
+                    default:
+                        Console.WriteLine("Deze keuze bestaat niet");
+                        break;
+                
                 }
 
-                input = Console.ReadLine();
+                key = Console.ReadKey(true).Key;
+                
+                teller++;
+                
+                if (teller == 9)
+                    key.Equals(ConsoleKey.Escape);
+                clearConsole();
 
+            } while (!key.Equals(ConsoleKey.Escape));
 
-            } while (input != "s");
-
-
+            return geld;
+          
+            // Een deel van de random kaarten laten zien
 
 
 
@@ -621,8 +782,12 @@ namespace Project0
 
         }
 
-        public static void slotMachine(int prijs)
+        public static int slotMachine(int prijs)
         {
+
+            Thread.Sleep(2000);
+            clearConsole();
+            Console.WriteLine("Welkom bij het slotmachine: ");
             ConsoleKey key;
            
 
@@ -652,15 +817,7 @@ namespace Project0
 
                 Console.WriteLine("SLOT MACHINE!");
 
-                // Check als 1 van  de 3 charaters op een rij gelijk zijn aan elkaar
-                // Dan wint hij 
-                // Maak een teller 
-                // Sla het vorige teken op 
-                // Vergelijk dan het huidige teken met vorige teken
-                // Als teller is 0 dan niet opslaan
-                // Als teller 2 is dan stoppen
-                // Vergelijk elke symbool met elkaar
-                // 1 Optellen als symbool groter is dan 
+            
                 int[] symboolNaarGetal = new int[3];
 
                 Console.WriteLine("Druk Enter om de slot machine te laten draaien...");
@@ -730,7 +887,6 @@ namespace Project0
                                     break;
                             }
 
-                            key = ConsoleKey.Escape;
                         }
                         else
                             prijs -= 10;
@@ -743,19 +899,23 @@ namespace Project0
                     Console.Write("Je kan alleen enter drukken");
                 }
 
-
+               Console.WriteLine(prijs);
                Thread.Sleep(1500);
                clearConsole();
+               if (prijs <= 0)
+                    break;
 
 
             } while (!key.Equals(ConsoleKey.Escape));
+            prijs = 0;
 
-            
             Console.WriteLine();
 
             Console.WriteLine("Finished");
 
             Console.WriteLine($"Geld: {prijs}");
+
+            return prijs;
 
             
 
